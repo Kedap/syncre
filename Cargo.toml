@@ -1,12 +1,5 @@
-[package]
-name = "syncre-lib"
-version = "0.1.0"
-authors = ["kedap <kedap.dev@protonmail.com>"]
-edition = "2018"
-description = "A rsync re-liable "
-readme = "README.md"
-repository = "https://github.com/Kedap/apmpkg"
-license = "Apache-2.0"
-keywords = ["rysnc"]
+[workspace]
 
-[dependencies]
+members = [
+    "syncre-lib",
+]
