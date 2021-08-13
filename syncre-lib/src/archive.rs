@@ -15,6 +15,7 @@ use {
 ///
 /// ```
 /// use std::path::Path;
+/// use syncre;
 /// let from = Path::new("dir/dir0/file.txt");
 /// let to = Path::new("/usr/app/configs/config.yml");
 /// match syncre::archive::copy_sync(from, to) {
