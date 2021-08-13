@@ -10,3 +10,4 @@ keywords = ["rsync", "archive"]
 
 [dependencies]
 copy_dir = "0.1.2"
+testdir = "0.4.0"
