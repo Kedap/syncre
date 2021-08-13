@@ -1,3 +1,5 @@
+//! Module archive
+
 use {
     copy_dir::copy_dir,
     std::{
@@ -7,8 +9,20 @@ use {
     },
 };
 
-/// # Copying files and directories, creating directories if necessary
-pub fn copy_p(source: &Path, target: &Path) -> Result<(), io::Error> {
+/// Copying files and directories, creating directories if necessary
+///
+/// # Example
+///
+/// ```
+/// use std::path::Path;
+/// let from = Path::new("dir/dir0/file.txt");
+/// let to = Path::new("/usr/app/configs/config.yml");
+/// match syncre::archive::copy_sync(from, to) {
+///     Err(e) => panic!("{}", e),
+///     Ok(v) => v
+/// }
+/// ```
+pub fn copy_sync(source: &Path, target: &Path) -> Result<(), io::Error> {
     // Filtrer the possibles errors
     if target.exists() && !target.is_dir() {
         return Err(Error::new(

@@ -4,7 +4,7 @@ use {crate::archive, std::path::Path};
 fn coping_test() {
     let testing_file = Path::new("testing.txt");
     let to = Path::new("testdir/folder/wola.txt");
-    match archive::copy_p(testing_file, to) {
+    match archive::copy_sync(testing_file, to) {
         Err(e) => panic!("{}", e),
         _ => {}
     }
