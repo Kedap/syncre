@@ -1,5 +1,5 @@
 [workspace]
 
 members = [
-    "syncre-lib",
+    "syncre_lib",
 ]
