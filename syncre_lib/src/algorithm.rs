@@ -13,10 +13,25 @@
 //!
 //! 4. `Source` searches its `File` to find all blocks of length `BLOCK_SIZE` bytes (at any offset, not just multiples of `BLOCK_SIZE`) that have the same weak and strong checksum as one of the blocks of `Destination` computer. This can be done in a single pass.
 
-use std::path::PathBuf;
+use {
+    md4::{Digest, Md4},
+    std::{fs, path::PathBuf},
+};
 
 pub struct File {
     path: PathBuf,
+}
+impl File {
+    fn md4_sum(&self) -> String {
+        let mut hasher = Md4::new();
+        // Replace myself for something you read in & [8U] and not in strings
+        let contents = match fs::read_to_string(&self.path.to_str().unwrap()) {
+            Ok(v) => v,
+            Err(e) => panic!("{}", e),
+        };
+        hasher.update(contents.as_bytes());
+        format!("{:x}", hasher.finalize())
+    }
 }
 pub struct Source {
     file: File,
@@ -28,7 +43,7 @@ pub struct FileBlock {}
 pub struct RollingChecksum {}
 pub struct StrongChecksum {}
 
-// comment for not error in tests
+// comment for erros in tests
 //#[cfg(test)]
 //mod tests {
 //use super::*;
