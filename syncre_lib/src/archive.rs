@@ -10,7 +10,7 @@ use {
     },
 };
 
-/// Copying files and directories, creating directories if necessary. The same is copied by the symbolic links
+/// Copying files and directories, creating directories if necessary. The same is copied by the symbolic links (archive mode)
 ///
 /// # Example
 ///
