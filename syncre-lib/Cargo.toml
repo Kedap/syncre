@@ -1,7 +1,7 @@
 [package]
 name = "syncre-lib"
 version = "0.1.0"
-authors = ["kedap <kedap.dev@protonmail.com>"]
+authors = ["kedap <kedap.dev@protonmail.com>", "saibatizoku <casabenita7@gmail.com>"]
 edition = "2018"
 description = "Librery for Sync Re-liable"
 repository = "https://github.com/Kedap/syncre"
