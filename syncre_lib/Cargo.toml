@@ -9,6 +9,8 @@ license = "GPL-3.0-or-later"
 keywords = ["rsync", "archive"]
 
 [dependencies]
+block-padding = "0.2.1"
+bytes = "1.0.1"
 copy_dir = "0.1.2"
 md4 = "0.9.0"
 testdir = "0.4.0"

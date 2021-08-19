@@ -14,23 +14,61 @@
 //! 4. `Source` searches its `File` to find all blocks of length `BLOCK_SIZE` bytes (at any offset, not just multiples of `BLOCK_SIZE`) that have the same weak and strong checksum as one of the blocks of `Destination` computer. This can be done in a single pass.
 
 use {
+    block_padding::{Padding, ZeroPadding},
+    bytes::Bytes,
     md4::{Digest, Md4},
-    std::{fs, path::PathBuf},
+    std::{
+        fs,
+        io::{Error, ErrorKind},
+        path,
+        path::PathBuf,
+    },
 };
 
 pub struct File {
     path: PathBuf,
+    bytes: usize,
 }
 impl File {
-    fn md4_sum(&self) -> String {
-        let mut hasher = Md4::new();
-        // Replace myself for something you read in & [8U] and not in strings
-        let contents = match fs::read_to_string(&self.path.to_str().unwrap()) {
-            Ok(v) => v,
-            Err(e) => panic!("{}", e),
-        };
-        hasher.update(contents.as_bytes());
-        format!("{:x}", hasher.finalize())
+    pub fn new(path: String) -> Self {
+        File {
+            path: path::Path::new(&path).to_path_buf(),
+            bytes: {
+                let file = match fs::read(path) {
+                    Ok(v) => v,
+                    Err(e) =>
+                    /*using panic temporaly*/
+                    {
+                        panic!("{}", e)
+                    }
+                };
+                let bytes = Bytes::from(file);
+                bytes.len()
+            },
+        }
+    }
+
+    //return the bytes filled in
+    // FIXME:
+    pub fn padding(&self) -> Result<&mut [u8], Error> {
+        if &self.bytes < &500 {
+            let contents = match fs::read(&self.path) {
+                Ok(v) => v,
+                Err(e) =>
+                /*using panic temporaly*/
+                {
+                    panic!("{}", e)
+                }
+            };
+            let number = contents.len();
+            let mut buffer = [0xff; 16];
+            buffer[..number].copy_from_slice(&contents);
+            //E0515, reference to buffer
+            Ok(ZeroPadding::pad(&mut buffer, number, &self.bytes - 500).expect("failure to fill"))
+        } else {
+            //only if is minor that 500 for testing code
+            Err(Error::new(ErrorKind::InvalidInput, "no need to fill"))
+        }
     }
 }
 pub struct Source {
@@ -43,13 +81,9 @@ pub struct FileBlock {}
 pub struct RollingChecksum {}
 pub struct StrongChecksum {}
 
-// comment for erros in tests
-//#[cfg(test)]
-//mod tests {
-//use super::*;
-
-//#[test]
-//fn step_one() {
-//todo!();
-//}
-//}
+pub fn md4_sum(bytes: &[u8]) -> String {
+    let mut hasher = Md4::new();
+    hasher.update(bytes);
+    format!("{:x}", hasher.finalize())
+}
+// Moving the tests to tests.rs

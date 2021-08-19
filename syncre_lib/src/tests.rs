@@ -36,3 +36,14 @@ fn coping_directory_test() {
         _ => {}
     }
 }
+
+// comment for erros in tests (from algorithm.rs)
+//#[cfg(test)]
+//mod tests {
+//use super::*;
+
+//#[test]
+//fn step_one() {
+//todo!();
+//}
+//}
