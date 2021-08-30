@@ -175,12 +175,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "block-padding"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
-
-[[package]]
 name = "blocking"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -828,7 +822,6 @@ dependencies = [
 name = "syncre_lib"
 version = "0.1.0"
 dependencies = [
- "block-padding",
  "bytes",
  "copy_dir",
  "md4",
