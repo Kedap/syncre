@@ -14,27 +14,22 @@
 //! 4. `Source` searches its `File` to find all blocks of length `BLOCK_SIZE` bytes (at any offset, not just multiples of `BLOCK_SIZE`) that have the same weak and strong checksum as one of the blocks of `Destination` computer. This can be done in a single pass.
 
 use {
-    block_padding::{Padding, ZeroPadding},
     bytes::Bytes,
     md4::{Digest, Md4},
-    std::{
-        fs,
-        io::{Error, ErrorKind},
-        path,
-        path::PathBuf,
-    },
+    std::{fs, path, path::PathBuf},
 };
 
 pub struct File {
-    path: PathBuf,
-    bytes: usize,
+    pub path: PathBuf,
+    pub bytes: usize,
+    pub contents_bytes: Bytes,
 }
 impl File {
     pub fn new(path: String) -> Self {
         File {
             path: path::Path::new(&path).to_path_buf(),
             bytes: {
-                let file = match fs::read(path) {
+                let file = match fs::read(path.clone()) {
                     Ok(v) => v,
                     Err(e) =>
                     /*using panic temporaly*/
@@ -45,29 +40,17 @@ impl File {
                 let bytes = Bytes::from(file);
                 bytes.len()
             },
-        }
-    }
-
-    //return the bytes filled in
-    // FIXME:
-    pub fn padding(&self) -> Result<&mut [u8], Error> {
-        if &self.bytes < &500 {
-            let contents = match fs::read(&self.path) {
-                Ok(v) => v,
-                Err(e) =>
-                /*using panic temporaly*/
-                {
-                    panic!("{}", e)
-                }
-            };
-            let number = contents.len();
-            let mut buffer = [0xff; 16];
-            buffer[..number].copy_from_slice(&contents);
-            //E0515, reference to buffer
-            Ok(ZeroPadding::pad(&mut buffer, number, &self.bytes - 500).expect("failure to fill"))
-        } else {
-            //only if is minor that 500 for testing code
-            Err(Error::new(ErrorKind::InvalidInput, "no need to fill"))
+            contents_bytes: {
+                let file = match fs::read(path.clone()) {
+                    Ok(v) => v,
+                    Err(e) =>
+                    /*using panic temporaly*/
+                    {
+                        panic!("{}", e)
+                    }
+                };
+                Bytes::from(file)
+            },
         }
     }
 }

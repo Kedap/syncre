@@ -1,6 +1,9 @@
 use {
-    crate::archive,
-    std::path::{Path, PathBuf},
+    crate::{algorithm::File, archive},
+    std::{
+        path::{Path, PathBuf},
+        str,
+    },
     testdir::testdir,
 };
 
@@ -35,6 +38,17 @@ fn coping_directory_test() {
         Err(e) => panic!("{}", e),
         _ => {}
     }
+}
+
+#[test]
+fn chunks_test() {
+    let archive = (File::new("testfiles/hello-world.txt".to_string()), {
+        let file = File::new("testfiles/hello-world.txt".to_string());
+        file.contents_bytes
+    });
+    let file_bytes = archive.1.chunks(2).next().unwrap();
+    //let file_bytes = archive.1.chunks(500).next().unwrap();
+    assert_eq!(Ok("he"), str::from_utf8(&file_bytes));
 }
 
 // comment for erros in tests (from algorithm.rs)

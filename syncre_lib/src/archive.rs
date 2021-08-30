@@ -17,8 +17,8 @@ use {
 /// ```
 /// use std::path::Path;
 /// use syncre_lib::archive;
-/// let from = Path::new("dir/dir0/file.txt");
-/// let to = Path::new("/usr/app/configs/config.yml");
+/// let from = Path::new("testfiles/hello-world.txt");
+/// let to = Path::new("/tmp/testdir/directory_not_exists/testfile.txt");
 /// match archive::copy_sync(from, to) {
 ///     Err(e) => panic!("{}", e),
 ///     Ok(v) => v
