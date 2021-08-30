@@ -53,6 +53,16 @@ impl File {
             },
         }
     }
+
+    pub fn get_sum_chunks(&self) -> Vec<String> {
+        let mut sums: Vec<String> = Vec::new();
+        let bytes = &self.contents_bytes;
+        let iter = bytes.chunks(500);
+        for chunk in iter {
+            sums.push(md4_sum(chunk))
+        }
+        sums
+    }
 }
 pub struct Source {
     file: File,

@@ -1,9 +1,6 @@
 use {
     crate::{algorithm::File, archive},
-    std::{
-        path::{Path, PathBuf},
-        str,
-    },
+    std::path::{Path, PathBuf},
     testdir::testdir,
 };
 
@@ -35,14 +32,12 @@ fn coping_directory_test() {
 }
 
 #[test]
-fn chunks_test() {
-    let archive = (File::new("testfiles/hello-world.txt".to_string()), {
-        let file = File::new("testfiles/hello-world.txt".to_string());
-        file.contents_bytes
-    });
-    let file_bytes = archive.1.chunks(2).next().unwrap();
-    //let file_bytes = archive.1.chunks(500).next().unwrap();
-    assert_eq!(Ok("he"), str::from_utf8(&file_bytes));
+fn md4_chunks_test() {
+    let archive = File::new("testfiles/hello-world.txt".to_string());
+    //assert_eq! is no avaliable on vectors
+    if vec!["97668ab2f29d0115bd0d1161b9bec520"] != archive.get_sum_chunks() {
+        panic!()
+    }
 }
 
 // comment for erros in tests (from algorithm.rs)
