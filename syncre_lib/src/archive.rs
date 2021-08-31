@@ -5,7 +5,6 @@ use {
     std::{
         fs, io,
         io::{Error, ErrorKind},
-        os::unix,
         path::Path,
     },
 };
@@ -49,9 +48,17 @@ pub fn copy_sync(source: &Path, target: &Path) -> Result<(), io::Error> {
     // Checking if the source is symbolic link
     if let Ok(v) = fs::read_link(source) {
         //Creation of a new symbolic link if the file contains one, the new link will take the file that listed the source
-        match unix::fs::symlink(v, target) {
-            Err(e) => return Err(e),
+
+        #[cfg(target_family = "windows")]
+        match create_link_windows(v.as_path(), target) {
             Ok(_) => return Ok(()),
+            Err(e) => return Err(e),
+        }
+
+        #[cfg(target_family = "unix")]
+        match create_link_unix(v.as_path(), target) {
+            Ok(_) => return Ok(()),
+            Err(e) => return Err(e),
         }
     } else if target.is_file() {
         if let Err(e) = fs::copy(source, target) {
@@ -61,4 +68,56 @@ pub fn copy_sync(source: &Path, target: &Path) -> Result<(), io::Error> {
         return Err(e);
     }
     Ok(())
+}
+
+/// Make syslink on windows, either directory or file (only on windows)
+///
+/// # Example
+///
+/// ```
+/// use std::path::Path;
+/// use syncre_lib::archive;
+/// let orginal = Path::new("testfiles/linked/hello-windows.txt");
+/// let link = Path::new("hello-windows-syslink.txt");
+/// match archive::create_link_windows(original, link) {
+///     Err(e) => panic!("{}", e),
+///     Ok(v) => v
+/// }
+/// ```
+#[cfg(target_family = "windows")]
+pub fn create_link_windows(orginal: &Path, link: &Path) -> Result<(), io::Error> {
+    use std::os::windows::fs;
+    if orginal.is_file() {
+        match fs::symlink_file(orginal, link) {
+            Ok(_v) => Ok(()),
+            Err(e) => Err(e),
+        }
+    } else {
+        match fs::symlink_dir(orginal, link) {
+            Ok(_v) => Ok(()),
+            Err(e) => Err(e),
+        }
+    }
+}
+
+/// Make syslink on unix, either directory or file (only in unix)
+///
+/// # Example
+///
+/// ```
+/// use std::path::Path;
+/// use syncre_lib::archive;
+/// let orginal = Path::new("testfiles/linked/hello-link.txt");
+/// let link = Path::new("hello-unix-syslink.txt");
+/// match archive::create_link_unix(original, link) {
+///     Err(e) => panic!("{}", e),
+///     Ok(v) => v
+/// }
+/// ```
+#[cfg(target_family = "unix")]
+pub fn create_link_unix(orginal: &Path, link: &Path) -> Result<(), io::Error> {
+    match fs::syslink(orginal, link) {
+        Ok(_v) => Ok(()),
+        Err(e) => Err(e),
+    }
 }
