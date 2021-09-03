@@ -72,7 +72,6 @@ pub struct Destination {
 }
 pub struct FileBlock {}
 pub struct RollingChecksum {}
-pub struct StrongChecksum {}
 
 pub fn md4_sum(bytes: &[u8]) -> String {
     let mut hasher = Md4::new();
