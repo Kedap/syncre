@@ -107,7 +107,7 @@ pub fn create_link_windows(orginal: &Path, link: &Path) -> Result<(), io::Error>
 /// ```
 /// use std::path::Path;
 /// use syncre_lib::archive;
-/// let orginal = Path::new("testfiles/linked/hello-link.txt");
+/// let original = Path::new("testfiles/linked/hello-link.txt");
 /// let link = Path::new("hello-unix-syslink.txt");
 /// match archive::create_link_unix(original, link) {
 ///     Err(e) => panic!("{}", e),
@@ -116,7 +116,8 @@ pub fn create_link_windows(orginal: &Path, link: &Path) -> Result<(), io::Error>
 /// ```
 #[cfg(target_family = "unix")]
 pub fn create_link_unix(orginal: &Path, link: &Path) -> Result<(), io::Error> {
-    match fs::syslink(orginal, link) {
+    use std::os::unix::fs;
+    match fs::symlink(orginal, link) {
         Ok(_v) => Ok(()),
         Err(e) => Err(e),
     }
