@@ -10,6 +10,8 @@ use {
 };
 
 /// Copying files and directories, creating directories if necessary. The same is copied by the symbolic links (archive mode)
+/// This returns an error if: `to` exists and is a directory at the same time, `from` does not exist,
+/// something fails when creating the necessary directories and if symbolic links cannot be created
 ///
 /// # Example
 ///
@@ -31,6 +33,62 @@ pub fn copy_sync(source: &Path, target: &Path) -> Result<(), io::Error> {
             "the file already exists",
         ));
     } else if !source.exists() {
+        return Err(Error::new(ErrorKind::NotFound, "the file not exists"));
+    }
+
+    if target.is_dir() {
+        if let Err(e) = fs::create_dir_all(target) {
+            return Err(e);
+        }
+    } else {
+        let parent = target.parent().unwrap();
+        if let Err(e) = fs::create_dir_all(parent) {
+            return Err(e);
+        }
+    }
+
+    // Checking if the source is symbolic link
+    if let Ok(v) = fs::read_link(source) {
+        //Creation of a new symbolic link if the file contains one, the new link will take the file that listed the source
+
+        #[cfg(target_family = "windows")]
+        match create_link_windows(v.as_path(), target) {
+            Ok(_) => return Ok(()),
+            Err(e) => return Err(e),
+        }
+
+        #[cfg(target_family = "unix")]
+        match create_link_unix(v.as_path(), target) {
+            Ok(_) => return Ok(()),
+            Err(e) => return Err(e),
+        }
+    } else if target.is_file() {
+        if let Err(e) = fs::copy(source, target) {
+            return Err(e);
+        }
+    } else if let Err(e) = copy_dir(source, target) {
+        return Err(e);
+    }
+    Ok(())
+}
+
+/// It does the same as `copy_sync` but it will not return an error if `to` exists (overwrite)
+///
+/// # Example
+///
+/// ```
+/// use std::path::Path;
+/// use syncre_lib::archive;
+/// let from = Path::new("testfiles/hello-world.txt");
+/// let to = Path::new("/tmp/testdir/directory_not_exists_overwrite/testfile.txt");
+/// match archive::copy_sync_ow(from, to) {
+///     Err(e) => panic!("{}", e),
+///     Ok(v) => v
+/// }
+/// ```
+pub fn copy_sync_ow(source: &Path, target: &Path) -> Result<(), io::Error> {
+    // Filtrer the possibles errors
+    if !source.exists() {
         return Err(Error::new(ErrorKind::NotFound, "the file not exists"));
     }
 

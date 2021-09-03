@@ -40,6 +40,15 @@ fn md4_chunks_test() {
     }
 }
 
+#[test]
+fn copy_sync_ow_test() {
+    let simple_file = Path::new("testfiles/hello-world.txt");
+    let dir: PathBuf = testdir!();
+    let to = dir.join("hello-world.txt");
+
+    archive::copy_sync_ow(simple_file, to.as_path()).unwrap();
+}
+
 // comment for erros in tests (from algorithm.rs)
 //#[cfg(test)]
 //mod tests {
