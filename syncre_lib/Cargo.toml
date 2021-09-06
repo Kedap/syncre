@@ -12,4 +12,5 @@ keywords = ["rsync", "archive"]
 bytes = "1.0.1"
 copy_dir = "0.1.2"
 md4 = "0.9.0"
+simd-adler32 = "0.3.3"
 testdir = "0.4.0"

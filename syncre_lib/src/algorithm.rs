@@ -16,9 +16,24 @@
 use {
     bytes::Bytes,
     md4::{Digest, Md4},
+    simd_adler32::Adler32,
     std::{fs, path, path::PathBuf},
 };
 
+/// File structure is necessary for the best manipulation of the files with the algorithm
+///
+/// # Example
+///
+/// ```
+/// use {
+///     syncre_lib::algorithm::File,
+///     std::path::Path,
+/// };
+/// let file = File::new("testfiles/hello-world.txt".to_string());
+/// assert_eq!(Path::new("testfiles/hello-world.txt").to_path_buf(), file.path);
+/// println!("Bytes total: {}", file.bytes);
+/// assert!(file.contents_bytes.is_ascii());
+/// ```
 pub struct File {
     pub path: PathBuf,
     pub bytes: usize,
@@ -59,7 +74,7 @@ impl File {
         let bytes = &self.contents_bytes;
         let iter = bytes.chunks(500);
         for chunk in iter {
-            sums.push(md4_sum(chunk))
+            sums.push(strong_checksum(chunk))
         }
         sums
     }
@@ -71,11 +86,34 @@ pub struct Destination {
     file: File,
 }
 pub struct FileBlock {}
-pub struct RollingChecksum {}
 
-pub fn md4_sum(bytes: &[u8]) -> String {
+/// Returns a strong sum (md4) as stated in the rsync algorithm. On String
+///
+/// # Example
+///
+/// ```
+/// use syncre_lib::algorithm;
+/// let bytes = b"hello world from rust :D";
+/// println!("{}", algorithm::strong_checksum(bytes));
+/// ```
+pub fn strong_checksum(bytes: &[u8]) -> String {
     let mut hasher = Md4::new();
     hasher.update(bytes);
     format!("{:x}", hasher.finalize())
+}
+
+/// Returns a string of a weak sum as the rsync algorithm says (adler-32 checksum)
+///
+/// # Example
+///
+/// ```
+/// use syncre_lib::algorithm;
+/// let bytes = b"hello world from rust :D";
+/// println!("{}", algorithm::rolling_checksum(bytes));
+/// ```
+pub fn rolling_checksum(bytes: &[u8]) -> String {
+    let mut adler = Adler32::new();
+    adler.write(bytes);
+    adler.finish().to_string()
 }
 // Moving the tests to tests.rs

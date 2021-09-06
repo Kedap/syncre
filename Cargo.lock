@@ -774,6 +774,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "simd-adler32"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d34f0e94c14658d38e72340969114df7c3f6e614fcbf22c993fb6744cfead86"
+
+[[package]]
 name = "slab"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -825,6 +831,7 @@ dependencies = [
  "bytes",
  "copy_dir",
  "md4",
+ "simd-adler32",
  "testdir",
 ]
 
