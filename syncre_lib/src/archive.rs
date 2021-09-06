@@ -1,4 +1,4 @@
-//! Module archive
+//! Module archive for manipulate files in archive mode how ```rsync -a```
 
 use {
     copy_dir::copy_dir,

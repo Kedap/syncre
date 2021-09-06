@@ -69,6 +69,17 @@ impl File {
         }
     }
 
+    /// Return a vector of StrongChecksum for all chunks (500 bytes)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use syncre_lib::algorithm::File;
+    /// let file = File::new("testfiles/hello-world.txt".to_string());
+    /// if vec!["97668ab2f29d0115bd0d1161b9bec520"] != file.get_sum_chunks() {
+    ///    panic!("Invalid StrongChecksum");
+    /// }
+    /// ```
     pub fn get_sum_chunks(&self) -> Vec<String> {
         let mut sums: Vec<String> = Vec::new();
         let bytes = &self.contents_bytes;
