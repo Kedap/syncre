@@ -1,6 +1,9 @@
 use {
     crate::{algorithm::File, archive},
-    std::path::{Path, PathBuf},
+    std::{
+        fs,
+        path::{Path, PathBuf},
+    },
     testdir::testdir,
 };
 
@@ -47,6 +50,34 @@ fn copy_sync_ow_test() {
     let to = dir.join("hello-world.txt");
 
     archive::copy_sync_ow(simple_file, to.as_path()).unwrap();
+}
+
+#[test]
+fn sync_dir_test() {
+    let dir_sync = Path::new("testfiles");
+    let dir: PathBuf = testdir!();
+    let to = dir.join("testfiles-sync");
+    fs::create_dir_all(to.clone()).unwrap();
+
+    archive::sync_dir(dir_sync, to.as_path()).unwrap();
+}
+
+#[test]
+fn sync_dir_ow_test() {
+    let dir_sync = Path::new("testfiles");
+    let dir: PathBuf = testdir!();
+    let to = dir.join("testfiles-overwrite");
+    fs::create_dir_all(to.clone()).unwrap();
+
+    archive::sync_dir_ow(dir_sync, to.as_path()).unwrap();
+}
+
+#[test]
+fn synchronize_test() {
+    let dir: PathBuf = testdir!();
+    let to = dir.join("test-no-exists");
+
+    archive::synchronize("testfiles", to.to_str().unwrap()).unwrap();
 }
 
 // comment for erros in tests (from algorithm.rs)

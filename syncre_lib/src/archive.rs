@@ -1,12 +1,9 @@
 //! Module archive for manipulate files in archive mode how ```rsync -a```
 
-use {
-    copy_dir::copy_dir,
-    std::{
-        fs, io,
-        io::{Error, ErrorKind},
-        path::Path,
-    },
+use std::{
+    fs, io,
+    io::{Error, ErrorKind},
+    path::Path,
 };
 
 /// Copying files and directories, creating directories if necessary. The same is copied by the symbolic links (archive mode)
@@ -36,14 +33,16 @@ pub fn copy_sync(source: &Path, target: &Path) -> Result<(), io::Error> {
         return Err(Error::new(ErrorKind::NotFound, "the file not exists"));
     }
 
-    if target.is_dir() {
+    if source.is_dir() {
         if let Err(e) = fs::create_dir_all(target) {
             return Err(e);
         }
     } else {
         let parent = target.parent().unwrap();
-        if let Err(e) = fs::create_dir_all(parent) {
-            return Err(e);
+        if !parent.exists() {
+            if let Err(e) = fs::create_dir_all(parent) {
+                return Err(e);
+            }
         }
     }
 
@@ -62,11 +61,11 @@ pub fn copy_sync(source: &Path, target: &Path) -> Result<(), io::Error> {
             Ok(_) => return Ok(()),
             Err(e) => return Err(e),
         }
-    } else if target.is_file() {
+    } else if source.is_file() {
         if let Err(e) = fs::copy(source, target) {
             return Err(e);
         }
-    } else if let Err(e) = copy_dir(source, target) {
+    } else if let Err(e) = sync_dir(source, target) {
         return Err(e);
     }
     Ok(())
@@ -92,14 +91,16 @@ pub fn copy_sync_ow(source: &Path, target: &Path) -> Result<(), io::Error> {
         return Err(Error::new(ErrorKind::NotFound, "the file not exists"));
     }
 
-    if target.is_dir() {
+    if source.is_dir() {
         if let Err(e) = fs::create_dir_all(target) {
             return Err(e);
         }
     } else {
         let parent = target.parent().unwrap();
-        if let Err(e) = fs::create_dir_all(parent) {
-            return Err(e);
+        if !parent.exists() {
+            if let Err(e) = fs::create_dir_all(parent) {
+                return Err(e);
+            }
         }
     }
 
@@ -118,13 +119,126 @@ pub fn copy_sync_ow(source: &Path, target: &Path) -> Result<(), io::Error> {
             Ok(_) => return Ok(()),
             Err(e) => return Err(e),
         }
-    } else if target.is_file() {
+    } else if source.is_file() {
         if let Err(e) = fs::copy(source, target) {
             return Err(e);
         }
-    } else if let Err(e) = copy_dir(source, target) {
+    } else if let Err(e) = sync_dir(source, target) {
         return Err(e);
     }
+    Ok(())
+}
+
+/// This function synchronizes the contents of one folder to another
+/// like copy_dir (<https://crates.io/crates/copy_dir>)
+/// This returns an error if: `to` exists and is a directory at the same time, `from` does not exist,
+/// something fails when creating the necessary directories and if symbolic links cannot be created
+///
+/// # Example
+///
+/// ```
+/// use std::path::Path;
+/// use syncre_lib::archive;
+/// let from = Path::new("testfiles/");
+/// let to = Path::new("/tmp/testdir/directory/pro");
+/// match archive::sync_dir(from, to) {
+///     Err(e) => panic!("{}", e),
+///     Ok(v) => v
+/// }
+/// ```
+pub fn sync_dir(src: &Path, dest: &Path) -> Result<(), io::Error> {
+    // Filtrer the possibles errors
+    if !src.is_dir() || !dest.is_dir() {
+        return Err(Error::new(
+            ErrorKind::Unsupported,
+            "the file is not a directory",
+        ));
+    } else if !src.exists() || !dest.exists() {
+        return Err(Error::new(ErrorKind::NotFound, "the file not exists"));
+    }
+    let dirs = src.read_dir()?;
+
+    for file in dirs {
+        let file = file?;
+        let path = file.path();
+
+        let relative_path = path.strip_prefix(src).unwrap();
+        let file_path_dest = dest.join(relative_path);
+        let file_path_src = src.join(relative_path);
+
+        copy_sync(&file_path_src.as_path(), &file_path_dest.as_path())?;
+    }
+
+    Ok(())
+}
+
+/// It does the same as `sync_dir` but it will not return an error if `to` exists (overwrite)
+///
+/// # Example
+///
+/// ```
+/// use std::path::Path;
+/// use syncre_lib::archive;
+/// let from = Path::new("testfiles/");
+/// let to = Path::new("/tmp/testdir/directory-to-overwrite/testfiles");
+/// match archive::sync_dir_ow(from, to) {
+///     Err(e) => panic!("{}", e),
+///     Ok(v) => v
+/// }
+/// ```
+pub fn sync_dir_ow(src: &Path, dest: &Path) -> Result<(), io::Error> {
+    // Filtrer the possibles errors
+    if !src.is_dir() || !dest.is_dir() {
+        return Err(Error::new(
+            ErrorKind::Unsupported,
+            "the file is not a directory",
+        ));
+    } else if !src.exists() || !dest.exists() {
+        return Err(Error::new(ErrorKind::NotFound, "the file not exists"));
+    }
+    let dirs = src.read_dir()?;
+
+    for file in dirs {
+        let file = file?;
+        let path = file.path();
+
+        let relative_path = path.strip_prefix(src).unwrap();
+        let file_path_dest = dest.join(relative_path);
+        let file_path_src = src.join(relative_path);
+
+        copy_sync_ow(&file_path_src.as_path(), &file_path_dest.as_path())?;
+    }
+
+    Ok(())
+}
+
+/// This function follows the logic of the command `rsync -a`
+/// where the '/' is decisive to know if the destination folder
+/// will be added to the name of the source or if they will be called the same
+/// If you still don't understand this function well and you have `rsync` installed,
+/// the operation is the same as: `rsync -a foo/bar /usr/share/` and `rsync -a foo/bar/
+/// /usr/share/bar`
+///
+/// In both cases the folder '/usr/share/bar' will be created
+///
+/// # Example
+/// ```
+/// use syncre_lib::archive;
+/// match archive::synchronize("testfiles/linked", "/tmp/no/exists/") {
+/// // /tmp/no/exists/linked is created
+///     Err(e) => panic!("{}", e),
+///     Ok(v) => v
+/// }
+/// ```
+pub fn synchronize(src: &str, dest: &str) -> Result<(), io::Error> {
+    if src.chars().last().unwrap() == '/' {
+        copy_sync_ow(Path::new(src), Path::new(dest))?;
+    } else {
+        let source_name = Path::new(src).file_name().unwrap();
+        let dest_final = Path::new(dest).join(source_name);
+        copy_sync_ow(Path::new(src), dest_final.as_path())?;
+    }
+
     Ok(())
 }
 
