@@ -231,7 +231,7 @@ pub fn sync_dir_ow(src: &Path, dest: &Path) -> Result<(), io::Error> {
 /// }
 /// ```
 pub fn synchronize(src: &str, dest: &str) -> Result<(), io::Error> {
-    if dest.chars().last().unwrap() == '/' {
+    if src.chars().last().unwrap() == '/' {
         copy_sync_ow(Path::new(src), Path::new(dest))?;
     } else {
         let source_name = Path::new(src).file_name().unwrap();
