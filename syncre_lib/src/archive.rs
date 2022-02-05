@@ -231,10 +231,12 @@ pub fn sync_dir_ow(src: &Path, dest: &Path) -> Result<(), io::Error> {
 /// }
 /// ```
 pub fn synchronize(src: &str, dest: &str) -> Result<(), io::Error> {
-    if src.chars().last().unwrap() == '/' {
+    let src_path = Path::new(src);
+
+    if src.chars().last().unwrap() == '/' || src_path.is_file() || src_path.is_symlink() {
         copy_sync_ow(Path::new(src), Path::new(dest))?;
     } else {
-        let source_name = Path::new(src).file_name().unwrap();
+        let source_name = src_path.file_name().unwrap();
         let dest_final = Path::new(dest).join(source_name);
         copy_sync_ow(Path::new(src), dest_final.as_path())?;
     }
